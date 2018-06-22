@@ -1,4 +1,5 @@
 {
     "python.pythonPath": "${workspaceFolder}/venv/bin/python",
     "python.unitTest.pyTestEnabled": true,
+    "python.formatting.provider": "black",
 }
