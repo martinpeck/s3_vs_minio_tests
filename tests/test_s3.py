@@ -14,7 +14,7 @@ def test_uploading_a_text_file():
 
     s3 = boto3.resource("s3")
     s3.meta.client.upload_file(
-        "tests/sample_files/hello.txt", aws_upload_bucket, uploaded_file_name
+        "tests/files/for_upload_tests/hello.txt", aws_upload_bucket, uploaded_file_name
     )
 
 
@@ -25,5 +25,5 @@ def test_downloading_a_file():
 
     s3 = boto3.resource("s3")
     s3.meta.client.download_file(
-        aws_download_bucket, "hello.txt", f"tests/test_temp/{downloaded_file_name}"
+        aws_download_bucket, "hello.txt", f"tests/files/for_download_tests/{downloaded_file_name}"
     )
