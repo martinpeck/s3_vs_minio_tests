@@ -1,0 +1,97 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "containerGroups_minio_azure_gateway_name": {
+            "defaultValue": "minio-azure-gateway",
+            "type": "string",
+            "metadata": {
+                "description": "Name of minio container group"
+              }
+        },
+        "location": {
+            "type": "string",
+            "defaultValue": "[resourceGroup().location]",
+            "metadata": {
+              "description": "Location for all resources."
+            }
+        }
+    },
+    "variables": {
+        "storageAccountName": "[concat(uniqueString(resourceGroup().id), 'storage')]",
+        "minioContainerName": "[parameters('containerGroups_minio_azure_gateway_name')]"
+      },
+    "resources": [
+        {
+            "comments": "Storage account for which Minio will provide gateway services",
+            "type": "Microsoft.Storage/storageAccounts",
+            "name": "[variables('storageAccountName')]",
+            "apiVersion": "2018-02-01",
+            "location": "[parameters('location')]",
+            "kind": "StorageV2",
+            "sku": {
+                "name": "Standard_LRS",
+                "tier": "Standard"
+            }
+        },
+        {
+            "type": "Microsoft.ContainerInstance/containerGroups",
+            "name": "[variables('minioContainerName')]",
+            "apiVersion": "2018-04-01",
+            "location": "[parameters('location')]",
+            "dependsOn": [
+                "[concat('Microsoft.Storage/storageAccounts/', variables('storageAccountName'))]"
+            ],
+            "scale": null,
+            "properties": {
+                "containers": [
+                    {
+                        "name": "[variables('minioContainerName')]",
+                        "properties": {
+                            "image": "minio/minio",
+                            "command": [
+                                "minio",
+                                "gateway",
+                                "azure"
+                            ],
+                            "ports": [
+                                {
+                                    "protocol": "TCP",
+                                    "port": 9000
+                                }
+                            ],
+                            "environmentVariables": [
+                                {
+                                    "name": "MINIO_ACCESS_KEY",
+                                    "value": "[variables('storageAccountName')]"
+                                },
+                                {
+                                    "name": "MINIO_SECRET_KEY",
+                                    "value": "[listkeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')),'2018-02-01').keys[0].value]"
+                                }
+                            ],
+                            "resources": {
+                                "requests": {
+                                    "memoryInGB": 1.5,
+                                    "cpu": 1
+                                }
+                            }
+                        }
+                    }
+                ],
+                "restartPolicy": "Never",
+                "ipAddress": {
+                    "ports": [
+                        {
+                            "protocol": "TCP",
+                            "port": 9000
+                        }
+                    ],
+                    "type": "Public",
+                    "dnsNameLabel": "[variables('minioContainerName')]"
+                },
+                "osType": "Linux"
+            }
+        }
+    ]
+}
