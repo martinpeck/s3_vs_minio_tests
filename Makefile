@@ -4,5 +4,9 @@ create-resource-group:
 	az group create --name minio-example --location westeurope
 delete-resource-group:
 	az group delete --name minio-example
-deploy-minio-resources:
-	az group deployment create --name minioexample --resource-group minio-example --template-file tests/azure/template.json
+deploy-minio-aci:
+	az group deployment create --name minioexample --resource-group minio-example --template-file ./azure-container-instance/azuredeploy.json
+deploy-minio-webapp:
+	az group deployment create --name minioexample --resource-group minio-example --template-file ./azure-webapp/azuredeploy.json
+deploy-minio-template:
+	az group deployment create --name minioexample --resource-group minio-example --template-file ./azure-webapp/template.json
