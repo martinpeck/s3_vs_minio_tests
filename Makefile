@@ -8,5 +8,3 @@ deploy-minio-aci:
 	az group deployment create --name minioexample --resource-group minio-example --template-file ./azure-container-instance/azuredeploy.json
 deploy-minio-webapp:
 	az group deployment create --name minioexample --resource-group minio-example --template-file ./azure-webapp/azuredeploy.json
-deploy-minio-template:
-	az group deployment create --name minioexample --resource-group minio-example --template-file ./azure-webapp/template.json
