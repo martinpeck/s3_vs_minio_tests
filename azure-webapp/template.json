@@ -3,33 +3,35 @@
     "contentVersion": "1.0.0.0",
     "parameters": {
         "sites_minio_gateway_name": {
-            "defaultValue": "minio-gateway-2",
+            "defaultValue": "minio-sample-gateway",
+            "metadata": {
+                "description": "Name of the minio gateway"
+            },
             "type": "String"
         },
         "location": {
-            "type": "string",
             "defaultValue": "[resourceGroup().location]",
             "metadata": {
-              "description": "Location for all resources."
-            }
+                "description": "Location for all resources."
+            },
+            "type": "string"
         }
     },
     "variables": {
-        "storageAccountsName": "[concat('storage', uniqueString(resourceGroup().id))]",
+        "storageAccountName": "[concat('storage', uniqueString(resourceGroup().id))]",
         "servicePlanName": "[concat('serviceplan', uniqueString(resourceGroup().id))]",
-        "hostNameBindingsName": "[concat(parameters('sites_minio_gateway_name'),'.azurewebsites.net')]",
-        "config_web_name": "web"
+        "hostNameBindingsName": "[concat(parameters('sites_minio_gateway_name'),'.azurewebsites.net')]"
     },
     "resources": [
         {
-            "comments": "Generalized from resource: '/subscriptions/9809c46e-6fdc-4989-a4cd-3a878466376e/resourceGroups/mpecktest1/providers/Microsoft.Storage/storageAccounts/iiugs2ehslglgstorage'.",
+            "comments": "Storage account",
             "type": "Microsoft.Storage/storageAccounts",
             "sku": {
                 "name": "Standard_LRS",
                 "tier": "Standard"
             },
             "kind": "StorageV2",
-            "name": "[variables('storageAccountsName')]",
+            "name": "[variables('storageAccountName')]",
             "apiVersion": "2018-02-01",
             "location": "[parameters('location')]",
             "tags": {},
@@ -58,7 +60,7 @@
             "dependsOn": []
         },
         {
-            "comments": "Generalized from resource: '/subscriptions/9809c46e-6fdc-4989-a4cd-3a878466376e/resourceGroups/mpecktest1/providers/Microsoft.Web/serverfarms/ServicePlan348f2986-b184'.",
+            "comments": "The App Service Plan for the Web App",
             "type": "Microsoft.Web/serverfarms",
             "sku": {
                 "name": "S1",
@@ -85,15 +87,12 @@
             "dependsOn": []
         },
         {
-            "comments": "Generalized from resource: '/subscriptions/9809c46e-6fdc-4989-a4cd-3a878466376e/resourceGroups/mpecktest1/providers/Microsoft.Web/sites/minio-gateway'.",
+            "comments": "The Web App",
             "type": "Microsoft.Web/sites",
             "kind": "app,linux,container",
             "name": "[parameters('sites_minio_gateway_name')]",
             "apiVersion": "2016-08-01",
             "location": "[parameters('location')]",
-            "tags": {
-                "hidden-related:/subscriptions/9809c46e-6fdc-4989-a4cd-3a878466376e/resourcegroups/mpecktest1/providers/Microsoft.Web/serverfarms/ServicePlan348f2986-b184": "empty"
-            },
             "scale": null,
             "properties": {
                 "enabled": true,
@@ -116,152 +115,41 @@
                     }
                 ],
                 "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('servicePlanName'))]",
-                "reserved": true,
-                "siteConfig": null,
-                "scmSiteAlsoStopped": false,
-                "hostingEnvironmentProfile": null,
-                "clientAffinityEnabled": true,
-                "clientCertEnabled": false,
-                "hostNamesDisabled": false,
-                "containerSize": 0,
-                "dailyMemoryTimeQuota": 0,
-                "cloningInfo": null
+                "siteConfig": {
+                    "linuxFxVersion": "DOCKER|martinpeck/minio-az-gateway:latest",
+                    "appSettings": [
+                        {
+                            "name": "MINIO_ACCESS_KEY",
+                            "value": "[variables('storageAccountName')]"
+                        },
+                        {
+                            "name": "MINIO_SECRET_KEY",
+                            "value": "[listkeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')),'2018-02-01').keys[0].value]"
+                        },
+                        {
+                            "name": "WEBSITES_PORT",
+                            "value": "9000"
+                        }
+                    ]
+                }
             },
             "dependsOn": [
                 "[resourceId('Microsoft.Web/serverfarms', variables('servicePlanName'))]"
-            ]
-        },
-        {
-            "comments": "Generalized from resource: '/subscriptions/9809c46e-6fdc-4989-a4cd-3a878466376e/resourceGroups/mpecktest1/providers/Microsoft.Web/sites/minio-gateway/config/web'.",
-            "type": "Microsoft.Web/sites/config",
-            "name": "[concat(parameters('sites_minio_gateway_name'), '/', variables('config_web_name'))]",
-            "apiVersion": "2016-08-01",
-            "location": "[parameters('location')]",
-            "tags": {
-                "hidden-related:/subscriptions/9809c46e-6fdc-4989-a4cd-3a878466376e/resourcegroups/mpecktest1/providers/Microsoft.Web/serverfarms/ServicePlan348f2986-b184": "empty"
-            },
-            "scale": null,
-            "properties": {
-                "numberOfWorkers": 1,
-                "defaultDocuments": [
-                    "Default.htm",
-                    "Default.html",
-                    "Default.asp",
-                    "index.htm",
-                    "index.html",
-                    "iisstart.htm",
-                    "default.aspx",
-                    "index.php",
-                    "hostingstart.html"
-                ],
-                "netFrameworkVersion": "v4.0",
-                "phpVersion": "",
-                "pythonVersion": "",
-                "nodeVersion": "",
-                "linuxFxVersion": "DOCKER|martinpeck/minio-az-gateway:latest",
-                "windowsFxVersion": null,
-                "requestTracingEnabled": false,
-                "remoteDebuggingEnabled": false,
-                "remoteDebuggingVersion": null,
-                "httpLoggingEnabled": false,
-                "logsDirectorySizeLimit": 35,
-                "detailedErrorLoggingEnabled": false,
-                "publishingUsername": "$minio-gateway",
-                "publishingPassword": null,
-                "appSettings": null,
-                "metadata": null,
-                "connectionStrings": null,
-                "machineKey": null,
-                "handlerMappings": null,
-                "documentRoot": null,
-                "scmType": "None",
-                "use32BitWorkerProcess": true,
-                "webSocketsEnabled": false,
-                "alwaysOn": false,
-                "javaVersion": null,
-                "javaContainer": null,
-                "javaContainerVersion": null,
-                "appCommandLine": "",
-                "managedPipelineMode": "Integrated",
-                "virtualApplications": [
-                    {
-                        "virtualPath": "/",
-                        "physicalPath": "site\\wwwroot",
-                        "preloadEnabled": false,
-                        "virtualDirectories": null
-                    }
-                ],
-                "winAuthAdminState": 0,
-                "winAuthTenantState": 0,
-                "customAppPoolIdentityAdminState": false,
-                "customAppPoolIdentityTenantState": false,
-                "runtimeADUser": null,
-                "runtimeADUserPassword": null,
-                "loadBalancing": "LeastRequests",
-                "routingRules": [],
-                "experiments": {
-                    "rampUpRules": []
-                },
-                "limits": null,
-                "autoHealEnabled": false,
-                "autoHealRules": null,
-                "tracingOptions": null,
-                "vnetName": "",
-                "siteAuthEnabled": false,
-                "siteAuthSettings": {
-                    "enabled": null,
-                    "unauthenticatedClientAction": null,
-                    "tokenStoreEnabled": null,
-                    "allowedExternalRedirectUrls": null,
-                    "defaultProvider": null,
-                    "clientId": null,
-                    "clientSecret": null,
-                    "issuer": null,
-                    "allowedAudiences": null,
-                    "additionalLoginParams": null,
-                    "isAadAutoProvisioned": false,
-                    "googleClientId": null,
-                    "googleClientSecret": null,
-                    "googleOAuthScopes": null,
-                    "facebookAppId": null,
-                    "facebookAppSecret": null,
-                    "facebookOAuthScopes": null,
-                    "twitterConsumerKey": null,
-                    "twitterConsumerSecret": null,
-                    "microsoftAccountClientId": null,
-                    "microsoftAccountClientSecret": null,
-                    "microsoftAccountOAuthScopes": null
-                },
-                "cors": null,
-                "push": null,
-                "apiDefinition": null,
-                "autoSwapSlotName": null,
-                "localMySqlEnabled": false,
-                "managedServiceIdentityId": null,
-                "xManagedServiceIdentityId": null,
-                "ipSecurityRestrictions": null,
-                "http20Enabled": false,
-                "minTlsVersion": "1.0",
-                "ftpsState": "AllAllowed"
-            },
-            "dependsOn": [
-                "[resourceId('Microsoft.Web/sites', parameters('sites_minio_gateway_name'))]"
-            ]
-        },
-        {
-            "comments": "Generalized from resource: '/subscriptions/9809c46e-6fdc-4989-a4cd-3a878466376e/resourceGroups/mpecktest1/providers/Microsoft.Web/sites/minio-gateway/hostNameBindings/minio-gateway.azurewebsites.net'.",
-            "type": "Microsoft.Web/sites/hostNameBindings",
-            "name": "[concat(parameters('sites_minio_gateway_name'), '/', variables('hostNameBindingsName'))]",
-            "apiVersion": "2016-08-01",
-            "location": "[parameters('location')]",
-            "scale": null,
-            "properties": {
-                "siteName": "minio-gateway",
-                "domainId": null,
-                "hostNameType": "Verified"
-            },
-            "dependsOn": [
-                "[resourceId('Microsoft.Web/sites', parameters('sites_minio_gateway_name'))]"
+            ],
+            "resources" : [
+                {
+                    "type": "hostNameBindings",
+                    "name": "[variables('hostNameBindingsName')]",
+                    "apiVersion": "2016-08-01",
+                    "location": "[parameters('location')]",
+                    "properties": {
+                        "siteName": "[parameters('sites_minio_gateway_name')]",
+                        "hostNameType": "Verified"
+                    },
+                    "dependsOn": [
+                        "[parameters('sites_minio_gateway_name')]"
+                    ]
+                }
             ]
         }
     ]
