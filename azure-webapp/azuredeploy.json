@@ -2,10 +2,10 @@
     "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-        "sites_minio_gateway_name": {
+        "minioGatewayName": {
             "defaultValue": "minio-sample-gateway",
             "metadata": {
-                "description": "Name of the minio gateway"
+                "description": "Name of the Minio gateway. e.g. 'my-minio-gateway'"
             },
             "type": "String"
         }
@@ -13,7 +13,7 @@
     "variables": {
         "storageAccountName": "[concat('storage', uniqueString(resourceGroup().id))]",
         "servicePlanName": "[concat('serviceplan', uniqueString(resourceGroup().id))]",
-        "hostNameBindingsName": "[concat(parameters('sites_minio_gateway_name'),'.azurewebsites.net')]",
+        "hostNameBindingsName": "[concat(parameters('minioGatewayName'),'.azurewebsites.net')]",
         "location": "[resourceGroup().location]"
     },
     "resources": [
@@ -84,7 +84,7 @@
             "comments": "The Web App",
             "type": "Microsoft.Web/sites",
             "kind": "app,linux,container",
-            "name": "[parameters('sites_minio_gateway_name')]",
+            "name": "[parameters('minioGatewayName')]",
             "apiVersion": "2016-08-01",
             "location": "[variables('location')]",
             "scale": null,
@@ -92,7 +92,7 @@
                 "enabled": true,
                 "hostNameSslStates": [
                     {
-                        "name": "[concat(parameters('sites_minio_gateway_name'),'.azurewebsites.net')]",
+                        "name": "[concat(parameters('minioGatewayName'),'.azurewebsites.net')]",
                         "sslState": "Disabled",
                         "virtualIP": null,
                         "thumbprint": null,
@@ -100,7 +100,7 @@
                         "hostType": "Standard"
                     },
                     {
-                        "name": "[concat(parameters('sites_minio_gateway_name'),'.scm.azurewebsites.net')]",
+                        "name": "[concat(parameters('minioGatewayName'),'.scm.azurewebsites.net')]",
                         "sslState": "Disabled",
                         "virtualIP": null,
                         "thumbprint": null,
@@ -137,11 +137,11 @@
                     "apiVersion": "2016-08-01",
                     "location": "[variables('location')]",
                     "properties": {
-                        "siteName": "[parameters('sites_minio_gateway_name')]",
+                        "siteName": "[parameters('minioGatewayName')]",
                         "hostNameType": "Verified"
                     },
                     "dependsOn": [
-                        "[parameters('sites_minio_gateway_name')]"
+                        "[parameters('minioGatewayName')]"
                     ]
                 }
             ]
